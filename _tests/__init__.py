@@ -1,0 +1,3 @@
+"""
+Celery test suite package
+"""
