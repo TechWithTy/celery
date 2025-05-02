@@ -28,6 +28,7 @@ Table of contents
     Restricting to one task at a time
     Canceling long-running tasks
     Returning results and exceptions
+    Celery Task Decorators for FastAPI
 
 Celery¶
 
@@ -285,6 +286,64 @@ You can try to get the traceback by making the task throw an exception or return
 
 curl http://localhost:8000/start
 curl http://localhost:8000/status | jq -r '.result'
+
+Celery Task Decorators for FastAPI
+=====================================
+
+### Available Decorators
+
+#### `@celery_task`
+Core task decorator with production-ready defaults:
+```python
+@celery_task(
+    name="custom_task_name",  # Optional
+    queue="high_priority",    # Default queue
+    max_retries=3,           # Max retry attempts
+    retry_delay=60,          # Seconds between retries
+    autoretry_for=(Exception,),  # Exceptions to retry
+    retry_jitter=True,       # Add randomness to retry delays
+    time_limit=300           # Task timeout in seconds
+)
+def process_data(data: dict):
+    # Task implementation
+```
+
+#### `@circuit_breaker`
+Prevents cascading failures:
+```python
+@circuit_breaker(
+    failure_threshold=3,  # Failures before tripping
+    reset_timeout=300     # Seconds before resetting
+)
+@celery_task()
+def unreliable_external_call():
+    # Call external service
+```
+
+#### `@priority_task`
+Sets task execution priority (0-9):
+```python
+@priority_task(priority=9)  # Highest priority
+@celery_task(queue="high_priority")
+def critical_task():
+    # Time-sensitive operation
+```
+
+#### `@timeout_task`
+Enforces time limits:
+```python
+@timeout_task(time_limit=30)  # 30 second timeout
+@celery_task()
+def time_limited_operation():
+    # Must complete within time limit
+```
+
+### Best Practices
+1. Always use `@celery_task` as the base decorator
+2. Stack decorators with `@celery_task` last
+3. Use type hints for better IDE support
+4. Include comprehensive logging
+5. Test all retry and failure scenarios
 
 Previous
 FastAPI
