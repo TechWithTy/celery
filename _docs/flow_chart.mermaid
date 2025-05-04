@@ -1,0 +1,104 @@
+flowchart LR
+ subgraph subGraph0["Task Definition Phase (Developer Action)"]
+    direction TB
+        Def_Decorate1["Apply <b>@celery_task</b><br><i>(Sets name, queue, defaults)</i>"]
+        Def_Start["Define Python Function"]
+        Def_Decorate2["Apply <b>@task_with_retry</b><br><i>(Adds auto-retry &amp; error logging)</i>"]
+        Def_Registered["Task Registered with Celery<br><i>(Ready for workers)</i>"]
+  end
+ subgraph subGraph1["Enqueueing Task"]
+    direction TB
+        Enc_Call["Call <b>create_task(...)</b><br><i>(Pass task_name, args, queue etc.)</i>"]
+        Enc_Start["Application Needs Background Work"]
+        Enc_Broker["Send Task Message to <b>Pulsar</b> Broker"]
+        Enc_Result["Receive <b>task_id</b>"]
+  end
+ subgraph subGraph2["Worker Execution (Conceptual)"]
+    direction LR
+        Worker_Exec["Celery Worker Executes Task<br><i>(Using Registered Function Logic)</i>"]
+        Worker_Broker["<b>Pulsar Broker</b>"]
+        Worker_StoreResult["Store Result in <b>Redis</b> Backend"]
+        Worker_RetryCheck{"Retry Logic Active?<br><i>(from @task_with_retry)</i>"}
+        Worker_LogRetry["Log Error &amp; Attempt Retry<br>(Re-queue to <b>Pulsar</b> if attempts remain)"]
+        Worker_StoreFailure["Store Failure State in <b>Redis</b> Backend"]
+  end
+ subgraph subGraph3["Status Checking"]
+    direction TB
+        Status_HaveID["Requires <b>task_id</b><br><i>(from Enqueueing)</i>"]
+        Status_Start["Application Needs Task Status"]
+        Status_Call["Call <b>get_task_status(task_id)</b>"]
+        Status_QueryBackend["Query <b>Redis</b> Result Backend"]
+        Status_Result["Receive Status Details<br><i>(State, Result, Traceback)</i>"]
+  end
+ subgraph subGraph4["Health Checking"]
+    direction TB
+        Health_Call["Call <b>check_celery_health()</b>"]
+        Health_Start["Monitoring/Admin Action"]
+        Health_Inspect["Inspect Workers via <b>Pulsar</b>/API"]
+        Health_Result["Receive Aggregated Health Status"]
+  end
+ subgraph subGraph5["Task Lifecycle & Monitoring (Application/System Actions)"]
+    direction TB
+        subGraph1
+        subGraph2
+        subGraph3
+        subGraph4
+        ResultBackend[("<b>Redis</b> Result Backend")]
+  end
+    Def_Start --> Def_Decorate1
+    Def_Decorate1 --> Def_Decorate2
+    Def_Decorate2 --> Def_Registered
+    Enc_Start --> Enc_Call
+    Enc_Call --> Enc_Broker
+    Enc_Broker --> Enc_Result & Worker_Broker
+    Worker_Broker -- Task Message --> Worker_Exec
+    Worker_Exec -- Success --> Worker_StoreResult
+    Worker_Exec -- Failure --> Worker_RetryCheck
+    Worker_RetryCheck -- Yes --> Worker_LogRetry
+    Worker_RetryCheck -- No --> Worker_StoreFailure
+    Worker_LogRetry --> Worker_Broker
+    Status_Start --> Status_HaveID
+    Status_HaveID --> Status_Call
+    Status_Call --> Status_QueryBackend
+    Status_QueryBackend --> Status_Result & ResultBackend
+    Health_Start --> Health_Call
+    Health_Call --> Health_Inspect
+    Health_Inspect --> Health_Result
+    Enc_Result --> Status_HaveID
+    Worker_StoreResult --> ResultBackend
+    Worker_StoreFailure --> ResultBackend
+    subGraph5 --> subGraph3
+
+     Def_Start:::startend
+     Def_Decorate1:::process
+     Def_Decorate2:::process
+     Def_Registered:::startend
+     Enc_Start:::startend
+     Enc_Call:::process
+     Enc_Broker:::io
+     Enc_Result:::startend
+     Worker_Broker:::io
+     Worker_Exec:::io
+     Worker_StoreResult:::io
+     Worker_RetryCheck:::decision
+     Worker_LogRetry:::io
+     Worker_StoreFailure:::io
+     Status_Start:::startend
+     Status_HaveID:::prerequisite
+     Status_Call:::process
+     Status_QueryBackend:::io
+     Status_Result:::startend
+     Health_Start:::startend
+     Health_Call:::process
+     Health_Inspect:::process
+     Health_Result:::startend
+     ResultBackend:::external
+    classDef process fill:#D6EAF8,stroke:#333,stroke-width:1px,color:#333333
+    classDef decision fill:#FCF3CF,stroke:#333,stroke-width:1px,color:#333333
+    classDef io fill:#E8DAEF,stroke:#333,stroke-width:1px,color:#333333
+    classDef external fill:#E5E7E9,stroke:#888,stroke-width:1px,color:#333333
+    classDef startend fill:#FFFFFF,stroke:#333,stroke-width:2px,color:#333333
+    classDef prerequisite fill:#FEF9E7,stroke:#F39C12,stroke-width:1px,color:#333333
+
+
+   

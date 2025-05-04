@@ -37,25 +37,23 @@ def create_task(
     kwargs: Optional[Dict] = None,
     queue: str = CELERY_DEFAULT_QUEUE,
     priority: int = 5,
-    **options,
+    **options
 ) -> str:
     """Create task with production-ready defaults"""
-    options.update(
-        {
-            "queue": queue,
-            "priority": priority,
-            "time_limit": CELERY_TASK_SOFT_TIME_LIMIT * 2,
-            "soft_time_limit": CELERY_TASK_SOFT_TIME_LIMIT,
-            "retry": True,
-            "retry_policy": {
-                "max_retries": 3,
-                "interval_start": 1,
-                "interval_step": 1,
-                "interval_max": 5,
-            },
+    options.update({
+        'queue': queue,
+        'priority': priority,
+        'time_limit': CELERY_TASK_SOFT_TIME_LIMIT * 2,
+        'soft_time_limit': CELERY_TASK_SOFT_TIME_LIMIT,
+        'retry': True,
+        'retry_policy': {
+            'max_retries': 3,
+            'interval_start': 1,
+            'interval_step': 1,
+            'interval_max': 5
         }
-    )
-
+    })
+    
     task = celery_app.send_task(task_name, args=args, kwargs=kwargs, **options)
     logger.info(f"Created task {task.id} in queue {queue} with priority {priority}")
     return task.id
@@ -70,11 +68,9 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
             "status": task_result.status,
             "queue": task_result.queue,
             "worker": task_result.worker,
-            "date_done": task_result.date_done.isoformat()
-            if task_result.date_done
-            else None,
+            "date_done": task_result.date_done.isoformat() if task_result.date_done else None,
             "result": task_result.result if task_result.ready() else None,
-            "traceback": task_result.traceback if task_result.failed() else None,
+            "traceback": task_result.traceback if task_result.failed() else None
         }
     except Exception as e:
         logger.error(f"Status check failed for {task_id}", exc_info=e)
