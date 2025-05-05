@@ -1,0 +1,97 @@
+# docker-compose.celery.yml
+version: '3.8'
+
+services:
+  celery:
+    # Both celery and celery-beat use the same image built from this Dockerfile
+    build:
+      context: . # Assumes Dockerfile path is relative to project root
+      dockerfile: docker/poetry/Dockerfile # Verify this path is correct
+    image: myapp-celery:${TAG:-latest} # Define a suitable image name/tag
+    container_name: celery_worker
+    restart: unless-stopped # Or 'always' if appropriate
+    volumes:
+      # Mount backend code for development/hot-reloading if needed
+      - ./backend:/app
+    env_file:
+      - .env # Loads environment variables
+    environment:
+      # Required environment variables for Celery worker
+      # Ensure secrets (DB/Redis Passwords, API Keys) are handled securely in production (e.g., Docker Secrets)
+      - PYTHONUNBUFFERED=1 # Often useful for logs
+      - POSTGRES_HOST=db # Service name of the database
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - DATABASE_URL=postgres://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB} # Example construction
+      - REDIS_HOST=redis # Service name of Redis
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - REDIS_DB=${REDIS_DB:-0}
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_password}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_password}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      # Add any other ENV VARS needed by your Celery tasks/app (SUPABASE etc.)
+      - SUPABASE_DB_CONNECTION_STRING=${SUPABASE_DB_CONNECTION_STRING}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    command: celery -A core worker -l info # Verify 'core' is your Celery app instance
+    networks:
+      - app-network # To connect to Redis
+      - default # To connect to DB
+    # depends_on: # Cannot depend on services in external files
+    #   - redis
+    #   - db
+    healthcheck:
+      # Verify 'core' is correct and healthcheck command works within your container
+      test: ["CMD", "celery", "-A", "core", "inspect", "ping", "-t", "10"]
+      interval: 1m
+      timeout: 20s
+      retries: 3
+      start_period: 2m
+
+  celery-beat:
+    # Uses the same image as the celery worker
+    image: myapp-celery:${TAG:-latest}
+    container_name: celery_beat
+    restart: unless-stopped # Or 'always'
+    volumes:
+      # Mount backend code if beat needs direct access to files (uncommon but possible)
+      - ./backend:/app
+    env_file:
+      - .env # Loads environment variables
+    environment:
+      # Required environment variables for Celery Beat (often identical to worker)
+      - PYTHONUNBUFFERED=1
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - DATABASE_URL=postgres://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - REDIS_DB=${REDIS_DB:-0}
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-redis_password}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-redis_password}@${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB}
+      # Add any other ENV VARS needed by your Celery beat scheduler (SUPABASE etc.)
+      - SUPABASE_DB_CONNECTION_STRING=${SUPABASE_DB_CONNECTION_STRING}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    command: celery -A core beat -l info -s /app/celerybeat-schedule # Verify 'core', consider persistent schedule file
+    networks:
+      - app-network # To connect to Redis (broker)
+      - default # To connect to DB (if needed by scheduled tasks)
+    depends_on:
+      # Ensures celery worker container is started first within this file,
+      # but doesn't guarantee worker is ready or that external deps (Redis/DB) are ready.
+      - celery
+
+networks:
+  default:
+    external: true # Assume 'default' network created elsewhere (e.g., by db.yml)
+  app-network:
+    external: true # Assume 'app-network' created elsewhere (e.g., by redis.yml)
