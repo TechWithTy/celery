@@ -4,7 +4,7 @@ Production task management with prioritization and monitoring.
 
 import logging
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional
+from typing import Any, dict, list, Optional
 from uuid import uuid4
 
 from celery import result
@@ -33,8 +33,8 @@ DEFAULT_TASK_TIMEOUT = 300
 
 def create_task(
     task_name: str,
-    args: Optional[List] = None,
-    kwargs: Optional[Dict] = None,
+    args: list | None = None,
+    kwargs: dict | None = None,
     queue: str = CELERY_DEFAULT_QUEUE,
     priority: int = 5,
     **options
@@ -59,7 +59,7 @@ def create_task(
     return task.id
 
 
-def get_task_status(task_id: str) -> Dict[str, Any]:
+def get_task_status(task_id: str) -> dict[str, Any]:
     """Enhanced status check with monitoring"""
     try:
         task_result = result.AsyncResult(task_id)
@@ -98,7 +98,7 @@ def configure_task_retries(
         return False
 
 
-def get_queue_stats(queue: str = "default") -> Dict[str, Any]:
+def get_queue_stats(queue: str = "default") -> dict[str, Any]:
     """Get queue statistics including depth and worker availability."""
     try:
         inspect = celery_app.control.inspect()

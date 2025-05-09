@@ -1,11 +1,11 @@
 """
 Celery health monitoring functionality
 """
-from typing import Dict, Any
+from typing , Any
 
 from app.core.celery.celery_client import celery_app
 
-async def check_celery_health() -> Dict[str, Any]:
+async def check_celery_health() -> dict[str, Any]:
     """
     Check Celery worker health status
     Returns:

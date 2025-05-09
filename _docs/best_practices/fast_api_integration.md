@@ -270,7 +270,7 @@ Simply add a new property to TaskOut:
 class TaskOut(BaseModel):
 id: str
 status: str
-result: str | None = None
+result: str | None
 
 And modify \_to_task_out like this:
 

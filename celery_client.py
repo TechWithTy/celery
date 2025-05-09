@@ -2,7 +2,7 @@
 Celery client configuration for production environments.
 """
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, dict, Optional
 
 from celery import Celery
 from celery.signals import after_task_publish, task_failure, task_success
@@ -109,7 +109,7 @@ def on_task_success(result, **kwargs):
     logger.info(f"Task succeeded: {result.task_id}")
 
 # Health check endpoint
-def health_check() -> Dict[str, Any]:
+def health_check() -> dict[str, Any]:
     """Return Celery worker health status"""
     try:
         inspect = celery_app.control.inspect()

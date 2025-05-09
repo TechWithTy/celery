@@ -87,7 +87,7 @@ celery -A app.core.celery.celery_client flower --port=5555
 ```bash
 redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASSWORD
 > MONITOR  # Watch real-time queue activity
-> KEYS *   # List all queues
+> KEYS *   # list all queues
 ```
 
 ## Best Practices

@@ -9,7 +9,7 @@ Features:
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, dict
 
 from fastapi import APIRouter, HTTPException
 from prometheus_client import Gauge
@@ -25,7 +25,7 @@ CELERY_WORKERS = Gauge("celery_active_workers", "Number of active Celery workers
 CELERY_TASKS = Gauge("celery_pending_tasks", "Number of pending tasks in queue")
 
 
-async def check_celery_health() -> Dict[str, Any]:
+async def check_celery_health() -> dict[str, Any]:
     """
     Rate-limited Celery health check using service rate limiter
     """

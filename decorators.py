@@ -20,10 +20,10 @@ telemetry = TelemetryClient(service_name="celery_tasks")
 
 
 def celery_task(
-    name: Optional[str] = None,
+    name: str | None,
     queue: str = CELERY_DEFAULT_QUEUE,
     soft_time_limit: int = CELERY_TASK_SOFT_TIME_LIMIT,
-    time_limit: Optional[int] = None,
+    time_limit: int | None,
     max_retries: int = 3,
     priority: int = 5,
     **options,
