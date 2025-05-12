@@ -2,7 +2,7 @@
 Celery client configuration for production environments.
 """
 import logging
-from typing import Any, dict, Optional
+from typing import Any, Optional
 
 from celery import Celery
 from celery.signals import after_task_publish, task_failure, task_success
@@ -24,8 +24,8 @@ from .config import (
 logger = logging.getLogger(__name__)
 
 # Get configuration from environment variables
-broker_url = f"redis://{f':{settings.REDIS_PASSWORD}@' if settings.REDIS_PASSWORD else ''}{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-result_backend = f"redis://{f':{settings.REDIS_PASSWORD}@' if settings.REDIS_PASSWORD else ''}{settings.REDIS_HOST}:{settings.REDIS_PORT}/1"
+broker_url = f"redis://{f':{settings.redis.REDIS_PASSWORD}@' if settings.redis.REDIS_PASSWORD else ''}{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/0"
+result_backend = f"redis://{f':{settings.redis.REDIS_PASSWORD}@' if settings.redis.REDIS_PASSWORD else ''}{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/1"
 
 celery_app = Celery(
     __name__,

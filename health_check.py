@@ -9,7 +9,7 @@ Features:
 """
 
 import logging
-from typing import Any, dict
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from prometheus_client import Gauge

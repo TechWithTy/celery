@@ -15,11 +15,11 @@ from app.core.celery.celery_client import celery_app
 from app.core.config import settings
 
 # Configure test Redis connection using production settings
-os.environ["REDIS_HOST"] = settings.REDIS_HOST
-os.environ["REDIS_PORT"] = str(settings.REDIS_PORT)
-os.environ["REDIS_PASSWORD"] = settings.REDIS_PASSWORD
-os.environ["CELERY_BROKER_URL"] = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-os.environ["CELERY_RESULT_BACKEND"] = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/1"
+os.environ["REDIS_HOST"] = settings.redis.REDIS_HOST
+os.environ["REDIS_PORT"] = str(settings.redis.REDIS_PORT)
+os.environ["REDIS_PASSWORD"] = settings.redis.REDIS_PASSWORD
+os.environ["CELERY_BROKER_URL"] = f"redis://:{settings.redis.REDIS_PASSWORD}@{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/0"
+os.environ["CELERY_RESULT_BACKEND"] = f"redis://:{settings.redis.REDIS_PASSWORD}@{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/1"
 
 @pytest.fixture(scope="module")
 def celery_config():

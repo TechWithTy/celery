@@ -1,9 +1,11 @@
 """
 Celery client configuration for production environments.
 """
+from typing import Any
 
 import logging
-from typing import Unknown
+
+# from typing import Unknown  # ! Removed: Unknown does not exist in typing module
 
 from celery import Celery
 from celery.signals import after_task_publish, task_failure, task_success
@@ -115,7 +117,7 @@ def on_task_success(result, **_kwargs):
 
 
 # Health check endpoint
-def health_check() -> dict[str, Unknown]:
+def health_check() -> dict[str, Any]:
     """Return Celery worker health status"""
     try:
         inspect = celery_app.control.inspect()

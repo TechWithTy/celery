@@ -1,7 +1,7 @@
 """
 Celery health monitoring functionality
 """
-from typing , Any
+from typing import  Any
 
 from app.core.celery.celery_client import celery_app
 

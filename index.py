@@ -4,7 +4,7 @@ Production task management with prioritization and monitoring.
 
 import logging
 from collections.abc import Callable
-from typing import Any, dict, list, Optional
+from typing import Any
 from uuid import uuid4
 
 from celery import result

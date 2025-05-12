@@ -6,8 +6,8 @@ from app.core.config import settings
 from datetime import timedelta
 
 # Core Settings
-CELERY_BROKER_URL = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/1"
+CELERY_BROKER_URL = f"redis://:{settings.redis.REDIS_PASSWORD}@{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://:{settings.redis.REDIS_PASSWORD}@{settings.redis.REDIS_HOST}:{settings.redis.REDIS_PORT}/1"
 
 # Queue Configuration
 CELERY_DEFAULT_QUEUE = 'default'
